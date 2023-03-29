@@ -39,3 +39,7 @@ variable "load_balancer_type" {
   description = "Type of the load balancer to create"
 }
 
+variable "ssh_key_file" {
+  default     = "~/.ssh/id_ed25519.pub"
+  description = "SSH key to add to all nodes to connect to server"
+}

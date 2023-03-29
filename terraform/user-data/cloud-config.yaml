@@ -1,0 +1,7 @@
+#cloud-config
+runcmd:
+  - dnf update -y
+  - dnf remove zram-generator-defaults
+  - sed -i "s@SELINUX=.*@SELINUX=disabled@g" /etc/selinux/config
+  - setenforce 0
+  - curl -fsSL https://tailscale.com/install.sh | sh

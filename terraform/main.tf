@@ -17,6 +17,11 @@ resource "hcloud_network_subnet" "subnet" {
   ]
 }
 
+resource "hcloud_ssh_key" "default" {
+  name       = "ssh key"
+  public_key = file(var.ssh_key_file)
+}
+
 resource "hcloud_server" "master" {
   name        = "control-plane-${count.index}"
   server_type = var.control_plane_server_type
@@ -28,12 +33,14 @@ resource "hcloud_server" "master" {
     ipv6_enabled = true
   }
   firewall_ids = [hcloud_firewall.firewall_master.id]
+  ssh_keys     = [hcloud_ssh_key.default.id]
   labels = {
     "role" : "k8s-control"
   }
   depends_on = [
     hcloud_network_subnet.subnet
   ]
+  user_data = file("./user-data/cloud-config.yaml")
 }
 
 resource "hcloud_server_network" "master_network" {
@@ -53,12 +60,14 @@ resource "hcloud_server" "worker" {
     ipv6_enabled = true
   }
   firewall_ids = [hcloud_firewall.firewall_worker.id]
+  ssh_keys     = [hcloud_ssh_key.default.id]
   labels = {
     "role" : "k8s-worker"
   }
   depends_on = [
     hcloud_network_subnet.subnet
   ]
+  user_data = file("./user-data/cloud-config.yaml")
 }
 
 resource "hcloud_server_network" "worker_network" {
@@ -92,9 +101,10 @@ resource "hcloud_load_balancer_network" "lb_net" {
 resource "hcloud_firewall" "firewall_worker" {
   name = "fw-worker-0"
   rule {
-    direction = "in"
-    protocol  = "tcp"
-    port      = "22"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "22"
+    description = "ssh"
     source_ips = [
       "0.0.0.0/0",
       "::/0"
@@ -105,9 +115,10 @@ resource "hcloud_firewall" "firewall_worker" {
 resource "hcloud_firewall" "firewall_master" {
   name = "fw-master-0"
   rule {
-    direction = "in"
-    protocol  = "tcp"
-    port      = "22"
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "22"
+    description = "ssh"
     source_ips = [
       "0.0.0.0/0",
       "::/0"
