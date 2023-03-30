@@ -7,7 +7,7 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # Check to see if the script has been run before. Exit out if so.
-FILE=/k8sControl
+FILE=$HOME/k8sControl
 if [ -f "$FILE" ]; then
     echo "WARNING!"
     echo "$FILE exists. Script has already been run on control plane."
@@ -17,21 +17,23 @@ else
     echo "$FILE does not exist. Running script"
 fi
 
+PRIVATE_IP=$(hostname -I | grep -oP '10\.96\.\d{1,3}\.\d{1,3}')
 KUBERNETES_VERSION="1.26.3"
-CRICTL_VERSION="1.26"
-POD_NETWORK_CIDR="10.244.0.0/16"
+CRICTL_VERSION="1.26.0"
+API_SERVER_ADVERTISE_IP=${PRIVATE_IP}
+POD_NETWORK_CIDR="10.128.0.0/16"
 CALICO_VERSION="3.25.0"
 HELM_VERSION="3.9.0"
 
 # Create a file when this script is started to keep it from running
 # twice on same node
-touch /k8sControl
+touch $FILE
 
 # Update the system
 dnf update -y
 
 # Install necessary software
-dnf install curl apt-transport-https vim git wget gnupg2 software-properties-common apt-transport-https ca-certificates 'dnf-command(versionlock)' dnf-plugins-core -y
+dnf install curl vim git wget gnupg2 ca-certificates 'dnf-command(versionlock)' dnf-plugins-core -y
 
 # Add repo for Kubernetes
 cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
@@ -44,7 +46,7 @@ gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
 # Install the Kubernetes software, and lock the version
-dnf install -y kubelet=${KUBERNETES_VERSION} kubeadm=${KUBERNETES_VERSION} kubectl=${KUBERNETES_VERSION}
+dnf install -y kubelet-${KUBERNETES_VERSION}-0.x86_64 kubeadm-${KUBERNETES_VERSION}-0.x86_64 kubectl-${KUBERNETES_VERSION}-0.x86_64
 dnf versionlock add kubelet
 dnf versionlock add kubeadm
 dnf versionlock add kubectl
@@ -64,13 +66,12 @@ cat <<EOF | tee /etc/sysctl.d/kubernetes.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
-net.ipv6.conf.default.forwarding = 1
+net.ipv6.conf.all.forwarding = 1
 EOF
 
 sysctl --system
 
 # Configure containerd settings
-￼
 cat <<EOF | tee /etc/modules-load.d/containerd.conf
 overlay
 br_netfilter
@@ -94,8 +95,8 @@ systemctl enable containerd
 
 #  Create the config file so no more errors
 # Install and configure crictl
-wget https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
-tar zxvf crictl-${CRICTL_VERSION}-linux-amd64.tar.gz
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v${CRICTL_VERSION}/crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
+tar zxvf crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
 mv crictl /usr/local/bin
 
 # Set the endpoints to avoid the deprecation error
@@ -104,7 +105,9 @@ crictl config \
     --set image-endpoint=unix:///run/containerd/containerd.sock
 
 # Configure the cluster
-kubeadm init --pod-network-cidr=${POD_NETWORK_CIDR} | tee /var/log/kubeinit.log
+kubeadm init --pod-network-cidr=${POD_NETWORK_CIDR} \
+            --apiserver-advertise-address=${API_SERVER_ADVERTISE_IP} \
+            --apiserver-cert-extra-sans=${API_SERVER_ADVERTISE_IP} | tee /var/log/kubeinit.log
 
 # Configure the non-root user to use kubectl
 mkdir -p $HOME/.kube

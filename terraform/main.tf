@@ -29,7 +29,7 @@ resource "hcloud_server" "master" {
   location    = var.location
   image       = var.control_plane_server_image
   public_net {
-    ipv4_enabled = false
+    ipv4_enabled = true
     ipv6_enabled = true
   }
   firewall_ids = [hcloud_firewall.firewall_master.id]
@@ -56,7 +56,7 @@ resource "hcloud_server" "worker" {
   location    = var.location
   image       = var.worker_server_image
   public_net {
-    ipv4_enabled = false
+    ipv4_enabled = true
     ipv6_enabled = true
   }
   firewall_ids = [hcloud_firewall.firewall_worker.id]
@@ -76,8 +76,8 @@ resource "hcloud_server_network" "worker_network" {
   count     = length(hcloud_server.worker)
 }
 
-resource "hcloud_load_balancer" "load_balancer" {
-  name               = "lb-0"
+resource "hcloud_load_balancer" "load_balancer_worker" {
+  name               = "lb-worker-0"
   location           = var.location
   load_balancer_type = var.load_balancer_type
   algorithm {
@@ -87,14 +87,14 @@ resource "hcloud_load_balancer" "load_balancer" {
 
 resource "hcloud_load_balancer_target" "lb_target" {
   type             = "server"
-  load_balancer_id = hcloud_load_balancer.load_balancer.id
+  load_balancer_id = hcloud_load_balancer.load_balancer_worker.id
   server_id        = hcloud_server.worker.*.id[count.index]
   use_private_ip   = true
   count            = length(hcloud_server.worker)
 }
 
 resource "hcloud_load_balancer_network" "lb_net" {
-  load_balancer_id = hcloud_load_balancer.load_balancer.id
+  load_balancer_id = hcloud_load_balancer.load_balancer_worker.id
   subnet_id        = hcloud_network_subnet.subnet.id
 }
 

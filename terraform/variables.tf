@@ -20,7 +20,7 @@ variable "control_plane_server_image" {
 }
 
 variable "worker_server_type" {
-  default     = "cpx41"
+  default     = "cpx31"
   description = "Type of vServer to use for the k8s worker nodes"
 }
 
