@@ -83,6 +83,9 @@ resource "hcloud_load_balancer" "load_balancer_worker" {
   algorithm {
     type = "least_connections"
   }
+  depends_on = [
+    hcloud_server.worker
+  ]
 }
 
 resource "hcloud_load_balancer_target" "lb_target" {
