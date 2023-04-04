@@ -32,7 +32,7 @@ API_SERVER_ADVERTISE_IP=${PRIVATE_IP}
 POD_NETWORK_CIDR="10.128.0.0/16"
 CALICO_VERSION="3.25.0"
 HELM_VERSION="3.9.0"
-
+SUBNET_NAME="kubenet"
 
 # Update the system
 dnf update -y
@@ -55,6 +55,8 @@ dnf install -y kubelet-${KUBERNETES_VERSION}-0.x86_64 kubeadm-${KUBERNETES_VERSI
 dnf versionlock add kubelet
 dnf versionlock add kubeadm
 dnf versionlock add kubectl
+
+tailscale up --authkey $1
 
 # Ensure Kubelet is running
 systemctl enable --now kubelet
@@ -119,7 +121,8 @@ EOF
 kubeadm init --pod-network-cidr=${POD_NETWORK_CIDR} \
             --apiserver-advertise-address=${API_SERVER_ADVERTISE_IP} \
             --apiserver-cert-extra-sans=${API_SERVER_ADVERTISE_IP} \
-            --apiserver-cert-extra-sans="${HOSTNAME}.${TAILSCALE_DNS}" | tee /var/log/kubeinit.log
+            --apiserver-cert-extra-sans="${HOSTNAME}.${TAILSCALE_DNS}" \
+            --upload-certs | tee /var/log/kubeinit.log
 
 # Configure the non-root user to use kubectl
 mkdir -p $HOME/.kube
@@ -132,12 +135,13 @@ tar -xf helm-v${HELM_VERSION}-linux-amd64.tar.gz
 cp linux-amd64/helm /usr/local/bin/
 
 # deploy hcloud-cloud-controller-manager
-kubectl -n kube-system create secret generic hcloud --from-literal=token=$1
+kubectl -n kube-system create secret generic hcloud --from-literal=token=$2 --from-literal=network=${SUBNET_NAME}
 helm repo add hcloud https://charts.hetzner.cloud
 helm repo update hcloud
 helm upgrade --install hccm hcloud/hcloud-cloud-controller-manager -n kube-system \
                 --set networking.enabled=true \
-                --set networking.clusterCIDR=${POD_NETWORK_CIDR}
+                --set networking.clusterCIDR=${POD_NETWORK_CIDR} \
+                --set monitoring.enabled=true
 
 # Use Calico as the network plugin
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/calico.yaml

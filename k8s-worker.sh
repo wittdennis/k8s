@@ -47,6 +47,8 @@ dnf versionlock add kubelet
 dnf versionlock add kubeadm
 dnf versionlock add kubectl
 
+tailscale up --authkey $1
+
 # Ensure Kubelet is running
 systemctl enable --now kubelet
 
