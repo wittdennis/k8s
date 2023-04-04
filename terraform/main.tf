@@ -124,6 +124,17 @@ resource "hcloud_firewall" "firewall_worker" {
       "::/0"
     ]
   }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "30000-32767"
+    description = "nodeport"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
 }
 
 resource "hcloud_firewall" "firewall_master" {
