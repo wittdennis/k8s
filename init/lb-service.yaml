@@ -7,6 +7,7 @@ metadata:
     load-balancer.hetzner.cloud/location: eu-central
     load-balancer.hetzner.cloud/name: lb-worker-0
     load-balancer.hetzner.cloud/health-check-port: "30542"
+    load-balancer.hetzner.cloud/use-private-ip: "true"
 spec:
   type: LoadBalancer
   sessionAffinity: None
