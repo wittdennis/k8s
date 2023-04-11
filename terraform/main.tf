@@ -86,6 +86,7 @@ resource "hcloud_load_balancer" "load_balancer_worker" {
   depends_on = [
     hcloud_server.worker
   ]
+  delete_protection = true
 }
 
 resource "hcloud_load_balancer_target" "lb_target" {
