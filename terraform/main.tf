@@ -94,6 +94,9 @@ resource "hcloud_load_balancer_target" "lb_target" {
   server_id        = hcloud_server.worker.*.id[count.index]
   use_private_ip   = true
   count            = length(hcloud_server.worker)
+  depends_on = [
+    hcloud_network_subnet.subnet
+  ]
 }
 
 resource "hcloud_load_balancer_network" "lb_net" {
@@ -119,6 +122,17 @@ resource "hcloud_firewall" "firewall_worker" {
     protocol    = "tcp"
     port        = "10250"
     description = "kubelet-api"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "10260"
+    description = "cert-manager-webhook"
     source_ips = [
       "0.0.0.0/0",
       "::/0"
