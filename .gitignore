@@ -35,3 +35,10 @@ terraform.rc
 
 # Plan files
 *.tfplan
+
+# Jsonnet ignore
+vendor/
+
+# monitroing ignores
+init/monitoring/manifests/
+init/monitoring/tmp/
