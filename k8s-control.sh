@@ -30,15 +30,19 @@ KUBERNETES_VERSION="1.26.3"
 CRICTL_VERSION="1.26.0"
 API_SERVER_ADVERTISE_IP=${PRIVATE_IP}
 POD_NETWORK_CIDR="10.128.0.0/16"
-CALICO_VERSION="3.25.0"
+CALICO_VERSION="3.25.1"
 HELM_VERSION="3.9.0"
 SUBNET_NAME="kubenet"
+YQ_VERSION="4.33.3"
 
 # Update the system
 dnf update -y
 
 # Install necessary software
 dnf install curl git wget gnupg2 ca-certificates 'dnf-command(versionlock)' dnf-plugins-core kernel-modules-extra -y
+
+wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq &&\
+    chmod +x /usr/bin/yq
 
 # Add repo for Kubernetes
 cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
@@ -144,7 +148,12 @@ helm upgrade --install hccm hcloud/hcloud-cloud-controller-manager -n kube-syste
                 --set monitoring.enabled=true
 
 # Use Calico as the network plugin
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/calico.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/tigera-operator.yaml
+
+curl https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/custom-resources.yaml -o calico-custom-resources.yaml
+yq -i ".spec.calicoNetwork.ipPools[0].cidr = \"${POD_NETWORK_CIDR}\"" calico-custom-resources.yaml
+
+kubectl apply -f calico-custom-resources.yaml
 
 sleep 9
 # Output the state of the cluster
