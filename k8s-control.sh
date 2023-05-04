@@ -34,6 +34,7 @@ CALICO_VERSION="3.25.1"
 HELM_VERSION="3.9.0"
 SUBNET_NAME="kubenet"
 YQ_VERSION="4.33.3"
+HCLOUD_CHART_VERSION="1.15.0"
 
 # Update the system
 dnf update -y
@@ -143,9 +144,11 @@ kubectl -n kube-system create secret generic hcloud --from-literal=token=$2 --fr
 helm repo add hcloud https://charts.hetzner.cloud
 helm repo update hcloud
 helm upgrade --install hccm hcloud/hcloud-cloud-controller-manager -n kube-system \
+                --version v${HCLOUD_CHART_VERSION} \
                 --set networking.enabled=true \
                 --set networking.clusterCIDR=${POD_NETWORK_CIDR} \
-                --set monitoring.enabled=true
+                --set monitoring.enabled=true \
+                --set-json 'env.HCLOUD_NETWORK={"valueFrom":{"secretKeyRef":{"name":"hcloud","key":"network"}}}'
 
 # Use Calico as the network plugin
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/manifests/tigera-operator.yaml
