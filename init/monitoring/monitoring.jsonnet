@@ -17,16 +17,19 @@ local kp =
       prometheus+: {
         namespaces: [],
       },
+      // alertmanager+: {
+      //   config: importstr 'alertmanager-config.yaml',
+      // },
     },
   };
 
-// ((import 'kube-prometheus/main.libsonnet') + {
-//    values+:: {
-//      alertmanager+: {
-//        config: importstr 'alertmanager-config.yaml',
-//      },
-//    },
-//  }).alertmanager.secret
+((import 'kube-prometheus/main.libsonnet') + {
+   values+:: {
+     alertmanager+: {
+       config: importstr 'alertmanager-config.yaml',
+     },
+   },
+ }).alertmanager.secret
 
 { 'setup/0namespace-namespace': kp.kubePrometheus.namespace } +
 {
