@@ -10,10 +10,6 @@ set -o pipefail
 # Make sure to use project tooling
 PATH="$(pwd)/tmp/bin:${PATH}"
 
-if test -f secrets.sh; then
-    source secrets.sh
-fi
-
 SNITCH_URL=${SNITCH_URL}
 PAGERDUTY_INTEGRATION_KEY=${PAGERDUTY_INTEGRATION_KEY}
 
