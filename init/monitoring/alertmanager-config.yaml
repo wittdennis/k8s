@@ -1,0 +1,45 @@
+inhibit_rules:
+  - equal:
+      - namespace
+      - alertname
+    source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity =~ warning|info
+  - equal:
+      - namespace
+      - alertname
+    source_matchers:
+      - severity = warning
+    target_matchers:
+      - severity = info
+  - equal:
+      - namespace
+    source_matchers:
+      - alertname = InfoInhibitor
+    target_matchers:
+      - severity = info
+route:
+  group_by: [alertname, namespace]
+  receiver: PagerDuty
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  routes:
+    - receiver: "DeadManSnitch"
+      group_wait: 10s
+      repeat_interval: 5m
+      match:
+        alertname: Watchdog
+    - match:
+        alertname: InfoInhibitor
+      receiver: "null"
+receivers:
+  - name: PagerDuty
+    pagerduty_configs:
+      - routing_key: "$INTEGRATION_KEY"
+        severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
+  - name: DeadManSnitch
+    webhook_configs:
+      - url: "$SNITCH_URL"
+  - name: "null"
