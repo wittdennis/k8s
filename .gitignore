@@ -42,3 +42,6 @@ vendor/
 # monitroing ignores
 init/monitoring/manifests/
 init/monitoring/tmp/
+
+# secrets script variables
+secrets.sh
