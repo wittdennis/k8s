@@ -146,8 +146,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "9100"
     description = "node_exporter"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -157,8 +156,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "179"
     description = "calico networking BGP"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -168,8 +166,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "4789"
     description = "calico vxlan"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -179,8 +176,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "5473"
     description = "calico typha"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -190,8 +186,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "51820"
     description = "calico ipv4 wireguard"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -201,8 +196,7 @@ resource "hcloud_firewall" "firewall_worker" {
     port        = "51821"
     description = "calico ipv6 wireguard"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -245,6 +239,26 @@ resource "hcloud_firewall" "firewall_master" {
   rule {
     direction   = "in"
     protocol    = "tcp"
+    port        = "10257"
+    description = "kube-controller-manager"
+    source_ips = [
+      hcloud_network_subnet.subnet.ip_range
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "10259"
+    description = "kube-sheduler"
+    source_ips = [
+      hcloud_network_subnet.subnet.ip_range
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
     port        = "10260"
     description = "cert-manager-webhook"
     source_ips = [
@@ -259,8 +273,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "9100"
     description = "node_exporter"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -270,8 +283,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "179"
     description = "calico networking BGP"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -281,8 +293,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "4789"
     description = "calico vxlan"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -292,8 +303,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "5473"
     description = "calico typha"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -303,8 +313,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "51820"
     description = "calico ipv4 wireguard"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 
@@ -314,8 +323,7 @@ resource "hcloud_firewall" "firewall_master" {
     port        = "51821"
     description = "calico ipv6 wireguard"
     source_ips = [
-      "0.0.0.0/0",
-      "::/0"
+      hcloud_network_subnet.subnet.ip_range
     ]
   }
 

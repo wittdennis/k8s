@@ -29,5 +29,5 @@ find manifests -type f ! -name '*.yaml' -delete
 rm -f kustomization
 
 # reset secrets in config
-yq -i '.receivers[0].pagerduty_configs[0].routing_key = "$ROUTING_KEY" |
+yq -i '.receivers[0].pagerduty_configs[0].routing_key = "$INTEGRATION_KEY" |
          .receivers[1].webhook_configs[0].url = "$SNITCH_URL"' alertmanager-config.yaml

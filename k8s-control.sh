@@ -129,6 +129,10 @@ kubeadm init --pod-network-cidr=${POD_NETWORK_CIDR} \
             --apiserver-cert-extra-sans="${HOSTNAME}.${TAILSCALE_DNS}" \
             --upload-certs | tee /var/log/kubeinit.log
 
+# expose controller-manager and scheduler for monitoring purposes
+sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
+sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
+
 # Configure the non-root user to use kubectl
 mkdir -p $HOME/.kube
 cp -f /etc/kubernetes/admin.conf $HOME/.kube/config

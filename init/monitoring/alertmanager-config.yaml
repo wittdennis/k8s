@@ -37,7 +37,7 @@ route:
 receivers:
   - name: PagerDuty
     pagerduty_configs:
-      - routing_key: "$ROUTING_KEY"
+      - routing_key: "$INTEGRATION_KEY"
         severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
   - name: DeadManSnitch
     webhook_configs:
