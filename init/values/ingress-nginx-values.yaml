@@ -1,7 +1,0 @@
-controller:
-  replicaCount: 1
-  metrics:
-    enabled: true
-  service:
-    healthCheckNodePort: 30542
-    externalTrafficPolicy: Local

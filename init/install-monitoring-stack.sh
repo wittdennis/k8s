@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT=$(readlink -f "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 

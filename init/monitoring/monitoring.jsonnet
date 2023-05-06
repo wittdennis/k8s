@@ -1,5 +1,14 @@
+local addMixin = (import 'kube-prometheus/lib/mixin.libsonnet');
+local certManagerMixin = addMixin({
+  name: 'cert-manager',
+  mixin: (import 'cert-manager-mixin/mixin.libsonnet') + {
+    _config+: {},
+  },
+});
+
 local kp =
   (import 'kube-prometheus/main.libsonnet') +
+  (import 'kube-prometheus/addons/all-namespaces.libsonnet') +
   // Uncomment the following imports to enable its patches
   // (import 'kube-prometheus/addons/anti-affinity.libsonnet') +
   // (import 'kube-prometheus/addons/managed-cluster.libsonnet') +
@@ -19,6 +28,9 @@ local kp =
       },
       alertmanager+: {
         config: importstr 'alertmanager-config.yaml',
+      },
+      grafana+: {
+        dashboards+: certManagerMixin.grafanaDashboards,
       },
     },
   };
@@ -41,4 +53,5 @@ local kp =
 { ['kubernetes-' + name]: kp.kubernetesControlPlane[name] for name in std.objectFields(kp.kubernetesControlPlane) }
 { ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
-{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) }
+{ ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) } +
+{ 'cert-manager-prometheus-rules': certManagerMixin.prometheusRules }

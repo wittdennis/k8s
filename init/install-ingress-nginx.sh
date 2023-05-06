@@ -1,6 +1,8 @@
 #!/bin/bash
 
-VERSION="4.6.0"
+set -e
+
+VERSION="4.6.1"
 SCRIPT=$(readlink -f "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
@@ -10,4 +12,4 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
     -n ingress-nginx \
     --create-namespace \
     --version ${VERSION} \
-    -f ${SCRIPT_PATH}/values/ingress-nginx-values.yaml
+    -f ${SCRIPT_PATH}/ingress-nginx/helm-values/ingress-nginx-values.yaml
