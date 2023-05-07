@@ -1,5 +1,9 @@
 controller:
-  replicaCount: 1
+  replicaCount: 2
+  config:
+    use-forwarded-headers: "true"
+    compute-full-forwared-for: "true"
+    use-proxy-protocol: "true"
   metrics:
     enabled: true
     serviceMonitor:
@@ -31,14 +35,20 @@ controller:
           annotations:
             description: Too many 5XXs
             summary: More than 5% of all requests returned 5XX, this requires your attention
-        - alert: NGINXTooMany400s
-          expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
-          for: 1m
-          labels:
-            severity: warning
-          annotations:
-            description: Too many 4XXs
-            summary: More than 5% of all requests returned 4XX, this requires your attention
+        # - alert: NGINXTooMany400s
+        #   expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests) ) > 5
+        #   for: 1m
+        #   labels:
+        #     severity: warning
+        #   annotations:
+        #     description: Too many 4XXs
+        #     summary: More than 5% of all requests returned 4XX, this requires your attention
   service:
     healthCheckNodePort: 30542
     externalTrafficPolicy: Local
+    annotations:
+      load-balancer.hetzner.cloud/location: eu-central
+      load-balancer.hetzner.cloud/name: lb-worker-0
+      load-balancer.hetzner.cloud/use-private-ip: "true"
+      load-balancer.hetzner.cloud/uses-proxyprotocol: "true"
+      load-balancer.hetzner.cloud/disable-private-ingress: "true"

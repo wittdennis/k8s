@@ -20,7 +20,11 @@ helm upgrade -i cert-manager jetstack/cert-manager \
 
 # Set secrets for clusterissuer
 yq -i ".spec.acme.email = \"${ACME_REGISTRATION_EMAIL}\"" ${SCRIPT_PATH}/cert-manager/letsencrypt-clusterissuer.yaml
+yq -i ".spec.acme.email = \"${ACME_REGISTRATION_EMAIL}\"" ${SCRIPT_PATH}/cert-manager/letsencrypt-staging-clusterissuer.yaml
+
 kubectl apply -f ${SCRIPT_PATH}/cert-manager/letsencrypt-clusterissuer.yaml
+kubectl apply -f ${SCRIPT_PATH}/cert-manager/letsencrypt-staging-clusterissuer.yaml
 
 # reset secret
 yq -i '.spec.acme.email = "$ACME_REGISTRATION_EMAIL"' ${SCRIPT_PATH}/cert-manager/letsencrypt-clusterissuer.yaml
+yq -i '.spec.acme.email = "$ACME_REGISTRATION_EMAIL"' ${SCRIPT_PATH}/cert-manager/letsencrypt-staging-clusterissuer.yaml
