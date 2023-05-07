@@ -189,6 +189,28 @@ resource "hcloud_firewall" "firewall_master" {
   rule {
     direction   = "in"
     protocol    = "tcp"
+    port        = "10257"
+    description = "kube-controller-manager"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "10259"
+    description = "kube-scheduler"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
     port        = "6443"
     description = "kube-apiserver"
     source_ips = [
