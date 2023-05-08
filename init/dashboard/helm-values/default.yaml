@@ -1,0 +1,6 @@
+replicaCount: 1
+extraArgs:
+  - --tls-cert-file=/tls.crt
+  - --tls-key-file=/tls.key
+metricsScraper:
+  enabled: true

@@ -24,4 +24,5 @@ The file has to contain these values:
 export PAGERDUTY_INTEGRATION_KEY="<your_pagerduty_integration_key>"
 export SNITCH_URL="<your_deadmansnitch_snitch_url"
 export ACME_REGISTRATION_EMAIL="<email_for_letsencrypt_registration>"
+export DOMAIN_NAME="<domain_name_of_cluster>"
 ```

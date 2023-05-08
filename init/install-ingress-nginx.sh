@@ -12,4 +12,4 @@ helm upgrade -i ingress-nginx ingress-nginx/ingress-nginx \
     -n ingress-nginx \
     --create-namespace \
     --version ${VERSION} \
-    -f ${SCRIPT_PATH}/ingress-nginx/helm-values/ingress-nginx-values.yaml
+    -f ${SCRIPT_PATH}/ingress-nginx/helm-values/default.yaml
