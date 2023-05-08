@@ -16,6 +16,7 @@ PAGERDUTY_INTEGRATION_KEY=${PAGERDUTY_INTEGRATION_KEY}
 # Set secrets for alertmanager config
 yq -i ".receivers[0].pagerduty_configs[0].routing_key = \"${PAGERDUTY_INTEGRATION_KEY}\" |
          .receivers[1].webhook_configs[0].url = \"${SNITCH_URL}\"" alertmanager-config.yaml
+sed -i "s/\$DOMAIN/${DOMAIN_NAME}/g" ${1-monitoring.jsonnet}
 
 # Make sure to start with a clean 'manifests' dir
 rm -rf manifests
@@ -31,3 +32,4 @@ rm -f kustomization
 # reset secrets in config
 yq -i '.receivers[0].pagerduty_configs[0].routing_key = "$INTEGRATION_KEY" |
          .receivers[1].webhook_configs[0].url = "$SNITCH_URL"' alertmanager-config.yaml
+sed -i "s/${DOMAIN_NAME}/\$DOMAIN/g" ${1-monitoring.jsonnet}

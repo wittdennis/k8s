@@ -164,6 +164,17 @@ resource "hcloud_firewall" "firewall_worker" {
   rule {
     direction   = "in"
     protocol    = "tcp"
+    port        = "9100"
+    description = "node-exporter"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
     port        = "30000-32767"
     description = "nodeport"
     source_ips = [
@@ -255,6 +266,17 @@ resource "hcloud_firewall" "firewall_master" {
     protocol    = "tcp"
     port        = "10260"
     description = "cert-manager-webhook"
+    source_ips = [
+      "0.0.0.0/0",
+      "::/0"
+    ]
+  }
+
+  rule {
+    direction   = "in"
+    protocol    = "tcp"
+    port        = "9100"
+    description = "node-exporter"
     source_ips = [
       "0.0.0.0/0",
       "::/0"

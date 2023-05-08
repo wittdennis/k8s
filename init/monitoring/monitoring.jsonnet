@@ -6,6 +6,35 @@ local certManagerMixin = addMixin({
   },
 });
 
+local networkPolicyFromRulesNginxIngress(ports) = [{
+  from: [{
+    namespaceSelector: {
+      matchLabels: {
+        'kubernetes.io/metadata.name': 'ingress-nginx',
+      },
+    },
+    podSelector: {
+      matchLabels: {
+        'app.kubernetes.io/name': 'ingress-nginx',
+      },
+    },
+  }],
+  ports: ports,
+}];
+local ingress(name, namespace, tls, rules) = {
+  apiVersion: 'networking.k8s.io/v1',
+  kind: 'Ingress',
+  metadata: {
+    name: name,
+    namespace: namespace,
+    annotations: {
+      'kubernetes.io/ingress.class': 'nginx',
+      'cert-manager.io/cluster-issuer': 'letsencrypt-staging',
+    },
+  },
+  spec: { tls: tls, rules: rules },
+};
+
 local kp =
   (import 'kube-prometheus/main.libsonnet') +
   (import 'kube-prometheus/addons/all-namespaces.libsonnet') +
@@ -31,7 +60,98 @@ local kp =
       },
       grafana+: {
         dashboards+: certManagerMixin.grafanaDashboards,
+        config+: {
+          sections+: {
+            server+: {
+              root_url: 'https://grafana.$DOMAIN',
+            },
+          },
+        },
       },
+    },
+
+    prometheus+:: {
+      prometheus+: {
+        spec+: {
+          externalUrl: 'https://prometheus.$DOMAIN',
+        },
+      },
+      networkPolicy+: {
+        spec+: {
+          ingress+: networkPolicyFromRulesNginxIngress([{ port: 'web', protocol: 'TCP' }]),
+        },
+      },
+    },
+    alertmanager+:: {
+      alertmanager+: {
+        spec+: {
+          externalUrl: 'https://alerts.$DOMAIN',
+        },
+      },
+      networkPolicy+: {
+        spec+: {
+          ingress+: networkPolicyFromRulesNginxIngress([{ port: 'web', protocol: 'TCP' }]),
+        },
+      },
+    },
+    grafana+:: {
+      networkPolicy+: {
+        spec+: {
+          ingress+: networkPolicyFromRulesNginxIngress([{ port: 'http', protocol: 'TCP' }]),
+        },
+      },
+    },
+    ingress+:: {
+      'alertmanager-main': ingress(
+        'alertmanager-main',
+        $.values.common.namespace,
+        [{
+          hosts: ['alerts.$DOMAIN'],
+          secretName: 'alertmanager-ingress-tls',
+        }],
+        [{
+          host: 'alerts.$DOMAIN',
+          http: {
+            paths: [{
+              path: '/',
+              pathType: 'Prefix',
+              backend: {
+                service: {
+                  name: 'alertmanager-main',
+                  port: {
+                    name: 'web',
+                  },
+                },
+              },
+            }],
+          },
+        }]
+      ),
+      'prometheus-k8s': ingress(
+        'prometheus-k8s',
+        $.values.common.namespace,
+        [{
+          hosts: ['prometheus.$DOMAIN'],
+          secretName: 'prometheus-ingress-tls',
+        }],
+        [{
+          host: 'prometheus.$DOMAIN',
+          http: {
+            paths: [{
+              path: '/',
+              pathType: 'Prefix',
+              backend: {
+                service: {
+                  name: 'prometheus-k8s',
+                  port: {
+                    name: 'web',
+                  },
+                },
+              },
+            }],
+          },
+        }]
+      ),
     },
   };
 
@@ -54,4 +174,5 @@ local kp =
 { ['node-exporter-' + name]: kp.nodeExporter[name] for name in std.objectFields(kp.nodeExporter) } +
 { ['prometheus-' + name]: kp.prometheus[name] for name in std.objectFields(kp.prometheus) } +
 { ['prometheus-adapter-' + name]: kp.prometheusAdapter[name] for name in std.objectFields(kp.prometheusAdapter) } +
-{ 'cert-manager-prometheus-rules': certManagerMixin.prometheusRules }
+{ 'cert-manager-prometheus-rules': certManagerMixin.prometheusRules } +
+{ [name + '-ingress']: kp.ingress[name] for name in std.objectFields(kp.ingress) }
