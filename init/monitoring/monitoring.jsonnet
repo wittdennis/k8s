@@ -21,7 +21,7 @@ local networkPolicyFromRulesNginxIngress(ports) = [{
   }],
   ports: ports,
 }];
-local ingress(name, namespace, tls, rules) = {
+local secureIngress(name, namespace, tls, rules) = {
   apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
@@ -30,6 +30,8 @@ local ingress(name, namespace, tls, rules) = {
     annotations: {
       'kubernetes.io/ingress.class': 'nginx',
       'cert-manager.io/cluster-issuer': 'letsencrypt-staging',
+      'nginx.ingress.kubernetes.io/auth-url': 'https://login.$DOMAIN/oauth2/auth',
+      'nginx.ingress.kubernetes.io/auth-signin': 'https://login.$DOMAIN/oauth2/start?rd=https://alerts.$DOMAIN$escaped_request_uri',
     },
   },
   spec: { tls: tls, rules: rules },
@@ -102,7 +104,7 @@ local kp =
       },
     },
     ingress+:: {
-      'alertmanager-main': ingress(
+      'alertmanager-main': secureIngress(
         'alertmanager-main',
         $.values.common.namespace,
         [{
@@ -127,7 +129,7 @@ local kp =
           },
         }]
       ),
-      'prometheus-k8s': ingress(
+      'prometheus-k8s': secureIngress(
         'prometheus-k8s',
         $.values.common.namespace,
         [{
