@@ -21,5 +21,7 @@ kubectl create -n ingress-nginx secret generic oauth2-proxy \
                     --from-literal=cookie.secret=${OAUTH_COOKIE_SECRET} 
 
 sed -i "s/\$DOMAIN/${DOMAIN_NAME}/g" ${SCRIPT_PATH}/ingress-nginx/oauth2-proxy.yaml
+sed -i "s/\$GITHUB_ORG/${GITHUB_ORG}/g" ${SCRIPT_PATH}/ingress-nginx/oauth2-proxy.yaml
 kubectl apply -f ${SCRIPT_PATH}/ingress-nginx/oauth2-proxy.yaml
 sed -i "s/${DOMAIN_NAME}/\$DOMAIN/g" ${SCRIPT_PATH}/ingress-nginx/oauth2-proxy.yaml
+sed -i "s/${GITHUB_ORG}/\$GITHUB_ORG/g" ${SCRIPT_PATH}/ingress-nginx/oauth2-proxy.yaml

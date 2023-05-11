@@ -27,5 +27,8 @@ export ACME_REGISTRATION_EMAIL="<email_for_letsencrypt_registration>"
 export DOMAIN_NAME="<domain_name_of_cluster>"
 export OAUTH_CLIENT_ID="<github_oauth_app_client_id>"
 export OAUTH_CLIENT_SECRET="<github_oauth_app_client_secret>"
-export OAUTH_COOKIE_SECRET="<generated_base64encoded_oauth_cookie_secret>" # eg.: python -c 'import os,base64; print(base64.b64encode(os.urandom(16)).decode("ascii"))'
+export OAUTH_COOKIE_SECRET="<generated_base64encoded_oauth_cookie_secret>" # eg.: dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64 | tr -d -- '\n' | tr -- '+/' '-_'; echo
+export GRAFANA_OAUTH_CLIENT_ID="<github_oauth_app_client_secret>"
+export GRAFANA_OAUTH_CLIENT_SECRET="<github_oauth_app_client_secret>"
+export GITHUB_ORG="<members_of_this_org_can_access_the_protected_resources>"
 ```

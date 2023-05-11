@@ -29,9 +29,23 @@ local secureIngress(name, namespace, tls, rules) = {
     namespace: namespace,
     annotations: {
       'kubernetes.io/ingress.class': 'nginx',
-      'cert-manager.io/cluster-issuer': 'letsencrypt-staging',
+      'cert-manager.io/cluster-issuer': 'letsencrypt',
       'nginx.ingress.kubernetes.io/auth-url': 'https://login.$DOMAIN/oauth2/auth',
       'nginx.ingress.kubernetes.io/auth-signin': 'https://login.$DOMAIN/oauth2/start?rd=https://alerts.$DOMAIN$escaped_request_uri',
+    },
+  },
+  spec: { tls: tls, rules: rules },
+};
+local ingress(name, namespace, tls, rules) = {
+  apiVersion: 'networking.k8s.io/v1',
+  kind: 'Ingress',
+  metadata: {
+    name: name,
+    namespace: namespace,
+    annotations: {
+      'kubernetes.io/ingress.class': 'nginx',
+      'cert-manager.io/cluster-issuer': 'letsencrypt',
+
     },
   },
   spec: { tls: tls, rules: rules },
@@ -66,6 +80,23 @@ local kp =
           sections+: {
             server+: {
               root_url: 'https://grafana.$DOMAIN',
+            },
+            security: {
+              admin_password: '$GRAFANA_ADMIN_PASSWORD',
+            },
+            'auth.github': {
+              enabled: true,
+              allow_sign_up: true,
+              auto_login: false,
+              client_id: '$GITHUB_APP_CLIENT_ID',
+              client_secret: '$GITHUB_APP_CLIENT_SECRET',
+              scopes: 'user:email,read:org',
+              auth_url: 'https://github.com/login/oauth/authorize',
+              token_url: 'https://github.com/login/oauth/access_token',
+              api_url: 'https://api.github.com/user',
+              allowed_organizations: '$GITHUB_ORG',
+              allow_assign_grafana_admin: true,
+              role_attribute_path: "contains(groups[*], '@$GITHUB_ORG/admins') &&  'GrafanaAdmin' || 'Viewer'",
             },
           },
         },
@@ -147,6 +178,31 @@ local kp =
                   name: 'prometheus-k8s',
                   port: {
                     name: 'web',
+                  },
+                },
+              },
+            }],
+          },
+        }]
+      ),
+      grafana: ingress(
+        'grafana',
+        $.values.common.namespace,
+        [{
+          hosts: ['grafana.$DOMAIN'],
+          secretName: 'grafana-ingress-tls',
+        }],
+        [{
+          host: 'grafana.$DOMAIN',
+          http: {
+            paths: [{
+              path: '/',
+              pathType: 'Prefix',
+              backend: {
+                service: {
+                  name: 'grafana',
+                  port: {
+                    name: 'http',
                   },
                 },
               },
