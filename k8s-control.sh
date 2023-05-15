@@ -35,6 +35,7 @@ HELM_VERSION="3.9.0"
 SUBNET_NAME="kubenet"
 YQ_VERSION="4.33.3"
 HCLOUD_CHART_VERSION="1.15.0"
+CSI_DRIVER_VERSION="2.3.2"
 
 # Update the system
 dnf update -y
@@ -161,6 +162,8 @@ curl https://raw.githubusercontent.com/projectcalico/calico/v${CALICO_VERSION}/m
 yq -i ".spec.calicoNetwork.ipPools[0].cidr = \"${POD_NETWORK_CIDR}\"" calico-custom-resources.yaml
 
 kubectl apply -f calico-custom-resources.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/hetznercloud/csi-driver/v${CSI_DRIVER_VERSION}/deploy/kubernetes/hcloud-csi.yml
 
 sleep 9
 # Output the state of the cluster

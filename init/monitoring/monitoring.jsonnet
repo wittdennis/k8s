@@ -75,7 +75,9 @@ local kp =
         config: importstr 'alertmanager-config.yaml',
       },
       grafana+: {
-        dashboards+: certManagerMixin.grafanaDashboards,
+        dashboards+:: {
+          'hcloud-csi-dashboard.json': (import 'hcloud-csi-dashboard.json'),
+        } + certManagerMixin.grafanaDashboards,
         config+: {
           sections+: {
             server+: {

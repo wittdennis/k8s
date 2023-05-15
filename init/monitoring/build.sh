@@ -14,7 +14,6 @@ SNITCH_URL=${SNITCH_URL}
 PAGERDUTY_INTEGRATION_KEY=${PAGERDUTY_INTEGRATION_KEY}
 GRAFANA_ADMIN_PASSWORD=$(tr -dc 'A-Za-z0-9!#$%&?@' </dev/urandom | head -c 20  ; echo)
 
-# Set secrets for alertmanager config
 yq -i ".receivers[0].pagerduty_configs[0].routing_key = \"${PAGERDUTY_INTEGRATION_KEY}\" |
          .receivers[1].webhook_configs[0].url = \"${SNITCH_URL}\"" alertmanager-config.yaml
 sed -i "s/\$DOMAIN/${DOMAIN_NAME}/g" ${1-monitoring.jsonnet}
@@ -22,6 +21,8 @@ sed -i "s/\$GRAFANA_ADMIN_PASSWORD/${GRAFANA_ADMIN_PASSWORD}/g" ${1-monitoring.j
 sed -i "s/\$GITHUB_APP_CLIENT_ID/${GRAFANA_OAUTH_CLIENT_ID}/g" ${1-monitoring.jsonnet}
 sed -i "s/\$GITHUB_APP_CLIENT_SECRET/${GRAFANA_OAUTH_CLIENT_SECRET}/g" ${1-monitoring.jsonnet}
 sed -i "s/\$GITHUB_ORG/${GITHUB_ORG}/g" ${1-monitoring.jsonnet}
+
+curl https://raw.githubusercontent.com/hetznercloud/csi-driver/main/deploy/monitoring/grafana-dashboard.json -o hcloud-csi-dashboard.json
 
 # Make sure to start with a clean 'manifests' dir
 rm -rf manifests
@@ -34,7 +35,6 @@ jsonnet -J vendor -m manifests "${1-monitoring.jsonnet}" | xargs -I{} sh -c 'cat
 find manifests -type f ! -name '*.yaml' -delete
 rm -f kustomization
 
-# reset secrets in config
 yq -i '.receivers[0].pagerduty_configs[0].routing_key = "$INTEGRATION_KEY" |
          .receivers[1].webhook_configs[0].url = "$SNITCH_URL"' alertmanager-config.yaml
 sed -i "s/${DOMAIN_NAME}/\$DOMAIN/g" ${1-monitoring.jsonnet}
@@ -42,3 +42,4 @@ sed -i "s/${GRAFANA_ADMIN_PASSWORD}/\$GRAFANA_ADMIN_PASSWORD/g" ${1-monitoring.j
 sed -i "s/${GRAFANA_OAUTH_CLIENT_ID}/\$GITHUB_APP_CLIENT_ID/g" ${1-monitoring.jsonnet}
 sed -i "s/${GRAFANA_OAUTH_CLIENT_SECRET}/\$GITHUB_APP_CLIENT_SECRET/g" ${1-monitoring.jsonnet}
 sed -i "s/${GITHUB_ORG}/\$GITHUB_ORG/g" ${1-monitoring.jsonnet}
+rm -f hcloud-csi-dashboard.json
