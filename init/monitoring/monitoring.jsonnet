@@ -5,6 +5,10 @@ local certManagerMixin = addMixin({
     _config+: {},
   },
 });
+local teamspeakMixin = addMixin({
+  name: 'teamspeak',
+  mixin: (import 'teamspeak-k8s/mixin.libsonnet'),
+});
 
 local networkPolicyFromRulesNginxIngress(ports) = [{
   from: [{
@@ -21,7 +25,7 @@ local networkPolicyFromRulesNginxIngress(ports) = [{
   }],
   ports: ports,
 }];
-local secureIngress(name, namespace, tls, rules) = {
+local secureIngress(name, namespace, redirectUri, tls, rules) = {
   apiVersion: 'networking.k8s.io/v1',
   kind: 'Ingress',
   metadata: {
@@ -31,7 +35,7 @@ local secureIngress(name, namespace, tls, rules) = {
       'kubernetes.io/ingress.class': 'nginx',
       'cert-manager.io/cluster-issuer': 'letsencrypt',
       'nginx.ingress.kubernetes.io/auth-url': 'https://login.$DOMAIN/oauth2/auth',
-      'nginx.ingress.kubernetes.io/auth-signin': 'https://login.$DOMAIN/oauth2/start?rd=https://alerts.$DOMAIN$escaped_request_uri',
+      'nginx.ingress.kubernetes.io/auth-signin': 'https://login.$DOMAIN/oauth2/start?rd=' + redirectUri,
     },
   },
   spec: { tls: tls, rules: rules },
@@ -45,7 +49,6 @@ local ingress(name, namespace, tls, rules) = {
     annotations: {
       'kubernetes.io/ingress.class': 'nginx',
       'cert-manager.io/cluster-issuer': 'letsencrypt',
-
     },
   },
   spec: { tls: tls, rules: rules },
@@ -76,8 +79,9 @@ local kp =
       },
       grafana+: {
         dashboards+:: {
-          'hcloud-csi-dashboard.json': (import 'hcloud-csi-dashboard.json'),
-        } + certManagerMixin.grafanaDashboards,
+                        'hcloud-csi-dashboard.json': (import '../hcloud-csi-driver/hcloud-csi-dashboard.json'),
+                      } + certManagerMixin.grafanaDashboards
+                      + teamspeakMixin.grafanaDashboards,
         config+: {
           sections+: {
             server+: {
@@ -140,6 +144,7 @@ local kp =
       'alertmanager-main': secureIngress(
         'alertmanager-main',
         $.values.common.namespace,
+        'https://alerts.$DOMAIN$escaped_request_uri',
         [{
           hosts: ['alerts.$DOMAIN'],
           secretName: 'alertmanager-ingress-tls',
@@ -165,6 +170,7 @@ local kp =
       'prometheus-k8s': secureIngress(
         'prometheus-k8s',
         $.values.common.namespace,
+        'https://prometheus.$DOMAIN$escaped_request_uri',
         [{
           hosts: ['prometheus.$DOMAIN'],
           secretName: 'prometheus-ingress-tls',

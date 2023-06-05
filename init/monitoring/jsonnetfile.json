@@ -13,6 +13,15 @@
     {
       "source": {
         "git": {
+          "remote": "https://github.com/wittdennis/teamspeak-k8s.git",
+          "subdir": ""
+        }
+      },
+      "version": "master"
+    },
+    {
+      "source": {
+        "git": {
           "remote": "https://gitlab.com/uneeq-oss/cert-manager-mixin.git",
           "subdir": ""
         }

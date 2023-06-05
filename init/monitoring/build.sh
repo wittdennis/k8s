@@ -22,8 +22,6 @@ sed -i "s/\$GITHUB_APP_CLIENT_ID/${GRAFANA_OAUTH_CLIENT_ID}/g" ${1-monitoring.js
 sed -i "s/\$GITHUB_APP_CLIENT_SECRET/${GRAFANA_OAUTH_CLIENT_SECRET}/g" ${1-monitoring.jsonnet}
 sed -i "s/\$GITHUB_ORG/${GITHUB_ORG}/g" ${1-monitoring.jsonnet}
 
-curl https://raw.githubusercontent.com/hetznercloud/csi-driver/main/deploy/monitoring/grafana-dashboard.json -o hcloud-csi-dashboard.json
-
 # Make sure to start with a clean 'manifests' dir
 rm -rf manifests
 mkdir -p manifests/setup
@@ -42,4 +40,3 @@ sed -i "s/${GRAFANA_ADMIN_PASSWORD}/\$GRAFANA_ADMIN_PASSWORD/g" ${1-monitoring.j
 sed -i "s/${GRAFANA_OAUTH_CLIENT_ID}/\$GITHUB_APP_CLIENT_ID/g" ${1-monitoring.jsonnet}
 sed -i "s/${GRAFANA_OAUTH_CLIENT_SECRET}/\$GITHUB_APP_CLIENT_SECRET/g" ${1-monitoring.jsonnet}
 sed -i "s/${GITHUB_ORG}/\$GITHUB_ORG/g" ${1-monitoring.jsonnet}
-rm -f hcloud-csi-dashboard.json
