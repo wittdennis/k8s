@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="4.6.1"
+VERSION="4.7.0"
 SCRIPT=$(readlink -f "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
