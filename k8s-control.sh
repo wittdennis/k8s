@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # check if we are root
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -33,9 +35,22 @@ POD_NETWORK_CIDR="10.128.0.0/16"
 CALICO_VERSION="3.25.1"
 HELM_VERSION="3.9.0"
 SUBNET_NAME="kubenet"
-YQ_VERSION="4.33.3"
+YQ_VERSION="4.34.1"
 HCLOUD_CHART_VERSION="1.15.0"
 CSI_DRIVER_VERSION="2.3.2"
+ARCH=$(uname -m)
+if [ $ARCH == "x86_64" ];
+then
+    PACKAGES_ARCH="linux-amd64"
+    YQ_ARCH="linux_amd64"
+elif [ $ARCH == "aarch64" ]
+then
+    PACKAGES_ARCH="linux-arm"
+    YQ_ARCH="linux_arm64"
+else
+    echo "Unsupported architecture detected"
+    exit 1
+fi
 
 # Update the system
 dnf update -y
@@ -43,7 +58,7 @@ dnf update -y
 # Install necessary software
 dnf install curl git wget gnupg2 ca-certificates 'dnf-command(versionlock)' dnf-plugins-core kernel-modules-extra -y
 
-wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -O /usr/bin/yq &&\
+wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_${YQ_ARCH} -O /usr/bin/yq &&\
     chmod +x /usr/bin/yq
 
 # Add repo for Kubernetes
@@ -57,12 +72,10 @@ gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
 # Install the Kubernetes software, and lock the version
-dnf install -y kubelet-${KUBERNETES_VERSION}-0.x86_64 kubeadm-${KUBERNETES_VERSION}-0.x86_64 kubectl-${KUBERNETES_VERSION}-0.x86_64
+dnf install -y kubelet-${KUBERNETES_VERSION}-0.${ARCH} kubeadm-${KUBERNETES_VERSION}-0.${ARCH} kubectl-${KUBERNETES_VERSION}-0.${ARCH}
 dnf versionlock add kubelet
 dnf versionlock add kubeadm
 dnf versionlock add kubectl
-
-tailscale up --authkey $1
 
 # Ensure Kubelet is running
 systemctl enable --now kubelet
@@ -107,8 +120,8 @@ systemctl enable containerd
 
 #  Create the config file so no more errors
 # Install and configure crictl
-wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v${CRICTL_VERSION}/crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
-tar zxvf crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v${CRICTL_VERSION}/crictl-v${CRICTL_VERSION}-${PACKAGES_ARCH}.tar.gz
+tar zxvf crictl-v${CRICTL_VERSION}-${PACKAGES_ARCH}.tar.gz
 mv crictl /usr/local/bin
 
 # Set the endpoints to avoid the deprecation error
@@ -140,9 +153,9 @@ cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
 
 # Add Helm to make our life easier
-wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
-tar -xf helm-v${HELM_VERSION}-linux-amd64.tar.gz
-cp linux-amd64/helm /usr/local/bin/
+wget https://get.helm.sh/helm-v${HELM_VERSION}-${PACKAGES_ARCH}.tar.gz
+tar -xf helm-v${HELM_VERSION}-${PACKAGES_ARCH}.tar.gz
+cp ${PACKAGES_ARCH}/helm /usr/local/bin/
 
 # deploy hcloud-cloud-controller-manager
 kubectl -n kube-system create secret generic hcloud --from-literal=token=$2 --from-literal=network=${SUBNET_NAME}

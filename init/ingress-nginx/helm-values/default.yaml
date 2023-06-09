@@ -1,5 +1,5 @@
 controller:
-  replicaCount: 2
+  kind: DaemonSet
   config:
     use-forwarded-headers: "true"
     compute-full-forwared-for: "true"
@@ -44,7 +44,6 @@ controller:
         #     description: Too many 4XXs
         #     summary: More than 5% of all requests returned 4XX, this requires your attention
   service:
-    healthCheckNodePort: 30542
     externalTrafficPolicy: Local
     annotations:
       load-balancer.hetzner.cloud/location: eu-central

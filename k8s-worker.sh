@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # check if we are root
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -24,6 +26,17 @@ touch $FILE
 
 KUBERNETES_VERSION="1.26.3"
 CRICTL_VERSION="1.26.0"
+ARCH=$(uname -m)
+if [ $ARCH == "x86_64" ];
+then
+    PACKAGE_ARCH="linux-amd64"
+elif [ $ARCH == "aarch64" ]
+then
+    PACKAGE_ARCH="linux-arm"
+else
+    echo "Unsupported architecture detected"
+    exit 1
+fi
 
 # Update the system
 dnf update -y
@@ -42,12 +55,10 @@ gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
 # Install the Kubernetes software, and lock the version
-dnf install -y kubelet-${KUBERNETES_VERSION}-0.x86_64 kubeadm-${KUBERNETES_VERSION}-0.x86_64 kubectl-${KUBERNETES_VERSION}-0.x86_64
+dnf install -y kubelet-${KUBERNETES_VERSION}-0.${ARCH} kubeadm-${KUBERNETES_VERSION}-0.${ARCH} kubectl-${KUBERNETES_VERSION}-0.${ARCH}
 dnf versionlock add kubelet
 dnf versionlock add kubeadm
 dnf versionlock add kubectl
-
-tailscale up --authkey $1
 
 # Ensure Kubelet is running
 systemctl enable --now kubelet
@@ -92,8 +103,8 @@ systemctl enable containerd
 
 #  Create the config file so no more errors
 # Install and configure crictl
-wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v${CRICTL_VERSION}/crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
-tar zxvf crictl-v${CRICTL_VERSION}-linux-amd64.tar.gz
+wget https://github.com/kubernetes-sigs/cri-tools/releases/download/v${CRICTL_VERSION}/crictl-v${CRICTL_VERSION}-${PACKAGE_ARCH}.tar.gz
+tar zxvf crictl-v${CRICTL_VERSION}-${PACKAGE_ARCH}.tar.gz
 mv crictl /usr/local/bin
 
 # Set the endpoints to avoid the deprecation error

@@ -5,5 +5,9 @@ terraform {
     hcloud = {
       source = "hetznercloud/hcloud"
     }
+
+    random = {
+      source = "hashicorp/random"
+    }
   }
 }

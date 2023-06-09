@@ -19,19 +19,35 @@ variable "control_plane_server_image" {
   description = "OS image of the control nodes"
 }
 
-variable "worker_server_type" {
+variable "x86_pool_server_type" {
   default     = "cpx31"
   description = "Type of vServer to use for the k8s worker nodes"
 }
 
-variable "worker_server_image" {
+variable "x86_pool_server_image" {
   default     = "fedora-37"
   description = "OS image of the worker nodes"
 }
 
-variable "worker_count" {
+variable "x86_pool_count" {
   default     = 1
   description = "Number of worker nodes to create"
+}
+
+variable "arm_pool_server_type" {
+  default     = "cax21"
+  description = "ARM pool server type"
+}
+
+variable "arm_pool_server_count" {
+  default     = 2
+  description = "Number of nodes inside the pool"
+}
+
+variable "arm_pool_server_image" {
+  default     = "fedora-38"
+  description = "OS image of pool"
+
 }
 
 variable "load_balancer_type" {
