@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="0.17.0"
+VERSION="0.15.0"
 
 helm repo add mariadb-operator https://mariadb-operator.github.io/mariadb-operator
 helm upgrade --install -n operators --create-namespace --version ${VERSION} \
